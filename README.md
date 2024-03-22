@@ -1,4 +1,4 @@
-Group Name - Rustaceans
+Group Name - Rust Aceans
 
 Pranav Narayanan(pn21), Aarav Agarwal(aarav3), Arha Gatram(agatram2)
 
@@ -29,4 +29,11 @@ This project makes use of the num_complex crate as the Fourier Transform involve
 
 Possible Challenges
 
-  We may have to re-implement the butterfly method 
+  * We may have to re-implement the butterfly method
+  * We will struggle to understand and have the patience to go through our long research papers we want to use
+  * We will have to understand computer architecture to effectively utilize the full performance of the CPU
+
+References:
+
+  * [Construction of a High-Performance FFT](https://edp.org/work/Construction.pdf)
+  * [Bluestein Design Document](https://rocm.docs.amd.com/projects/rocFFT/en/latest/design/bluestein.html)
