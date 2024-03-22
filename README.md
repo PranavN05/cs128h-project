@@ -11,21 +11,21 @@ This project makes use of the num_complex crate as the Fourier Transform involve
 
   By Checkpoint 1:
   
-    Implement the bit-reversal method for the input dataset. This step works for the algorithm operating on datasets of a length that is a power of 2. In essence, all the indices are converted to binary, their digits are reversed, and they are reordered according to the reversed binary. This sets up the dataset to be transformed.
+  Implement the bit-reversal method for the input dataset. This step works for the algorithm operating on datasets of a length that is a power of 2. In essence, all the indices are converted to binary, their digits are reversed, and they are reordered according to the reversed binary. This sets up the dataset to be transformed.
     
-    Implement the butterfly method that takes two pairs of DFTs and computes the combined DFT for the total of that dataset. In the FFT, this is known as the butterfly step. It recomputes the transform of each input value by computing a linear combination of one value from each input DFT, using the relevant root of unity to scale these values.
+  Implement the butterfly method that takes two pairs of DFTs and computes the combined DFT for the total of that dataset. In the FFT, this is known as the butterfly step. It recomputes the transform of each input value by computing a linear combination of one value from each input DFT, using the relevant root of unity to scale these values.
     
   By Checkpoint 2:
   
-    Set up a main method that calls the bit-reversal and combiner functions in the necessary order based on the input dataset. Each call to the butterfly will be done in a new thread in order to make use of parallelism.
+  Set up a main method that calls the bit-reversal and combiner functions in the necessary order based on the input dataset. Each call to the butterfly will be done in a new thread in order to make use of parallelism.
     
-    Implement methods to read data in from a file and store in a vector, and to output a vector of data into a file. These files will be whitespace delimited sets of data. Alongside these methods will be a method that ensures that the dataset is a power of two, in order for this algorithm to be applicable.
+  Implement methods to read data in from a file and store in a vector, and to output a vector of data into a file. These files will be whitespace delimited sets of data. Alongside these methods will be a method that ensures that the dataset is a power of two, in order for this algorithm to be applicable.
     
   By Deadline:
   
-    Will implement Chirrp-Z Transform (CZT), which computes DFT for more general datasets. This requires implementing the inverse FFT, which makes use of the same functions as FFT. It will also require a method that zero-pads the dataset such that it becomes a power of two. The CZT method that we will write combines the FFT methods and the iFFT to compute DFT for non "power-of-2" datasets.
+  Will implement Chirrp-Z Transform (CZT), which computes DFT for more general datasets. This requires implementing the inverse FFT, which makes use of the same functions as FFT. It will also require a method that zero-pads the dataset such that it becomes a power of two. The CZT method that we will write combines the FFT methods and the iFFT to compute DFT for non "power-of-2" datasets.
     
-    Will refactor the main method and file reads to allow for datasets that are not base-2.
+  Will refactor the main method and file reads to allow for datasets that are not base-2.
 
 Possible Challenges
 
