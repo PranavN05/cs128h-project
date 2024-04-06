@@ -10,9 +10,6 @@ fn bit_reversal(ind: usize, nbits: usize) -> usize {
     out
 }
 
-fn fft_butterfly(inp: Vec<Complex32>) -> Vec<Complex32> {
-    todo!()
-}
 
 fn fft(inp: Vec<Complex32>) -> Vec<Complex32> {
     assert!(inp.len() & (inp.len() - 1) == 0); // checks if power of 2
