@@ -1,3 +1,5 @@
+mod tests;
+
 use std::f32::consts::PI;
 
 use num_complex::{Complex32, ComplexFloat};
@@ -11,7 +13,7 @@ fn bit_reversal(ind: usize, nbits: usize) -> usize {
 }
 
 
-fn fft(inp: Vec<Complex32>) -> Vec<Complex32> {
+fn fft(inp: &Vec<Complex32>) -> Vec<Complex32> {
     assert!(inp.len() & (inp.len() - 1) == 0); // checks if power of 2
     let n = (inp.len() as f32).log2() as usize; // inp.len() = 2^n
     let mut v: Vec<Complex32> = (0..inp.len()).map(|x| inp[bit_reversal(x, n)]).collect();
@@ -49,6 +51,6 @@ fn main() {
         Complex32::new(0f32, 0f32),
         Complex32::new(-4f32, 0f32),
     ];
-    let h = fft(v);
+    let h = fft(&v);
     println!("{:?}", h);
 }
