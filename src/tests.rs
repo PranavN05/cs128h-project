@@ -1,20 +1,17 @@
-
-
 extern crate rand;
-use core::num;
 
 use rand::Rng;
-use rustfft::{num_complex::Complex32, FftPlanner};
+use rustfft::{num_complex::Complex64, FftPlanner};
 
 #[test]
 fn test_accuracy_random_values() {
-    let numvals = (1 << 14);
+    let numvals = 1 << 25;
     let mut rng = rand::thread_rng();
-    let mut vals: Vec<Complex32> = (0..numvals)
+    let mut vals: Vec<Complex64> = (0..numvals)
         .map(|_| {
-            Complex32::new(
-                rng.gen::<f32>() * 20.0 - 10.0,
-                rng.gen::<f32>() * 20.0 - 10.0,
+            Complex64::new(
+                rng.gen::<f64>() * 20.0 - 10.0,
+                rng.gen::<f64>() * 20.0 - 10.0,
             )
         })
         .collect();
