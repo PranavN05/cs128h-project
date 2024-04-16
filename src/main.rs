@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests;
+mod fileio;
 
 use std::f64::consts::PI;
 
