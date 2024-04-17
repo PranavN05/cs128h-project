@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::fs::OpenOptions;
 
 use num_complex::Complex64;
 
@@ -10,6 +11,7 @@ pub fn complex_vec_from_file(path: &str) -> Vec<Complex64> {
     // Each data point represented by two whitespace separated values
     // for real and imaginary part
     // If odd number of values in file, last complex part will be 0
+    // Panics if path invalid or if file has non-decimal text
 
     //Read String from File
     let mut file = match File::open(Path::new(path)) {
@@ -53,3 +55,22 @@ pub fn complex_vec_from_file(path: &str) -> Vec<Complex64> {
     toreturn
 }
 
+pub fn complex_vec_to_file(path: &str, vec: &Vec<Complex64>) {
+    //Takes a vector of complex numbers as input, writes them to file specified by path
+    //Each complex number will be written on its own line
+    //Real and imaginary parts will be separated by whitespace
+    //If path doesn't exist will create a file, otherwise will append to existing file
+    //Panics if file cannot be opened (i.e. nonexistent directory in path, no permission)
+    let mut file = match OpenOptions::new().create(true).append(true).open(path) {
+        Ok(x) => x,
+        Err(err) => panic!("Cannot open {}, {}", path, err),
+    };
+    let mut nums: String = "\n".to_string();
+    for num in vec {
+        nums += format!("{} {}\n", num.re, num.im).as_str();
+    }
+    match file.write_all(nums.as_bytes()) {
+        Ok(_) => (),
+        Err(err) => panic!("write output to file failed, {}", err),
+    }
+}
