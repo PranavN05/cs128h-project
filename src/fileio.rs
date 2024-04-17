@@ -4,16 +4,16 @@ use std::path::Path;
 
 use num_complex::Complex64;
 
-fn complex_vec_from_file(path: &str) -> Vec<Complex64> {
+pub fn complex_vec_from_file(path: &str) -> Vec<Complex64> {
     // Takes a file path as an input, returns vector of Complex64
     // Expecting data points separated by whitespace
     // Each data point represented by two whitespace separated values
     // for real and imaginary part
-    // If odd number values in file, last complex part will be 0
+    // If odd number of values in file, last complex part will be 0
 
     //Read String from File
     let mut file = match File::open(Path::new(path)) {
-        Err(err) => panic!("couldn't open {}: {}", path, err),
+        Err(_) => panic!("couldn't open {}", path),
         Ok(file) => file,
     };
 

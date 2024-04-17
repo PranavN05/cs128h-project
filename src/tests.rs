@@ -4,7 +4,7 @@ use rand::Rng;
 use rustfft::{num_complex::Complex64, FftPlanner};
 
 #[test]
-fn test_accuracy_random_values() {
+fn base2fft_accuracy_randvals() {
     let numvals = 1 << 25;
     let mut rng = rand::thread_rng();
     let mut vals: Vec<Complex64> = (0..numvals)
@@ -21,4 +21,39 @@ fn test_accuracy_random_values() {
         let diff = our_truth[i] - vals[i];
         assert!(diff.norm_sqr() < 0.1);
     }
+}
+
+#[test]
+fn file_input() {
+    let ground_truth1 = vec![
+        Complex64::new(1.6, 4.0),
+        Complex64::new(7.0, 23.0),
+        Complex64::new(41.2, 1.0),
+        Complex64::new(194.134, 5.1294),
+        Complex64::new(2.127, 5.0)
+    ];
+    assert_eq!(crate::fileio::complex_vec_from_file("testfiles\\test1.txt"), ground_truth1);
+    let ground_truth2 = vec![
+        Complex64::new(1.0, 4.0),
+        Complex64::new(3.0, 2.0),
+        Complex64::new(2.0, 4.0),
+        Complex64::new(3.0, 3.0),
+        Complex64::new(1.0, 1.0),
+        Complex64::new(0.0, 3.0),
+        Complex64::new(78.0, 7.0),
+        Complex64::new(-182.0, 0.0)
+    ];
+    assert_eq!(crate::fileio::complex_vec_from_file("testfiles\\test2.txt"), ground_truth2);
+}
+
+#[test]
+#[should_panic(expected = "couldn't convert these into a decimal value")]
+fn file_input_non_decimal() {
+    crate::fileio::complex_vec_from_file("testfiles\\invalid.txt");
+}
+
+#[test]
+#[should_panic(expected = "couldn't open doesntexist")]
+fn file_input_bad_path() {
+    crate::fileio::complex_vec_from_file("doesntexist");
 }
