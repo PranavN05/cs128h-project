@@ -1,7 +1,5 @@
-use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-use std::path::Path;
 
 use num_complex::Complex64;
 
@@ -14,7 +12,7 @@ pub fn complex_vec_from_file(path: &str) -> Vec<Complex64> {
     // Panics if path invalid or if file has non-decimal text
 
     //Read String from File
-    let mut file = match File::open(Path::new(path)) {
+    let mut file = match OpenOptions::new().read(true).open(path) {
         Err(_) => panic!("couldn't open {}", path),
         Ok(file) => file,
     };
