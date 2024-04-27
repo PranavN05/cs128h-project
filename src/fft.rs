@@ -152,3 +152,46 @@ fn czt(inp: Vec<Complex64>, m: usize, a: Complex64, w: Complex64) -> Vec<Complex
 
     out
 }
+
+fn iczt(inp: Vec<Complex64>, m: usize, a: Complex64, w: Complex64) -> Vec<Complex64> {
+    let n = inp.len();
+
+    // Inverse parameters
+    let a_inv = a.recip();
+    let w_inv = w.recip();
+
+    let mut chirp_pm = Vec::with_capacity(n);
+    for i in 0..n {
+        let exp = Complex64::new(0.0, PI * i as f64 * i as f64).exp().conj();
+        chirp_pm.push(inp[i] * exp);
+    }
+
+    let mut convolved = vec![Complex64::new(0.0, 0.0); n + m - 1];
+    convolved[..n].copy_from_slice(&chirp_pm);
+    fft_in_place(&mut convolved);
+
+    let mut chirp_post = Vec::with_capacity(n + m - 1);
+    for i in 0..n + m - 1 {
+        let exp = Complex64::new(0.0, PI * i as f64 * i as f64).exp().conj();
+        chirp_post.push(exp);
+    }
+
+    for i in 0..n + m - 1 {
+        convolved[i] = convolved[i] * chirp_post[i];
+    }
+
+    convolved = ifft(&convolved);
+
+    let mut out = Vec::with_capacity(m);
+    for i in 0..m {
+        let exp = Complex64::new(0.0, PI * i as f64 * i as f64).exp();
+        out.push(convolved[i] * exp * a_inv.powu(i as u32));
+    }
+
+    let len = Complex64::new((n + m - 1) as f64, 0.0);
+    for i in 0..m {
+        out[i] = out[i] / len;
+    }
+
+    out
+}
