@@ -28,6 +28,28 @@ fn base2fft_accuracy_randvals() {
 }
 
 #[test]
+fn ifft_accuracy_randvals() {
+    let numvals = 1 << 10;
+    let mut rng = rand::thread_rng();
+    let mut vals: Vec<Complex64> = (0..numvals)
+        .map(|_| {
+            Complex64::new(
+                rng.gen::<f64>() * 20.0 - 10.0,
+                rng.gen::<f64>() * 20.0 - 10.0,
+            )
+        })
+        .collect();
+    let our_truth = crate::ifft(&vals);
+    FftPlanner::new()
+        .plan_fft_backward(numvals)
+        .process(&mut vals);
+    for i in 0..numvals {
+        let diff = our_truth[i] - vals[i];
+        assert!(diff.norm_sqr() < 0.1);
+    }
+}
+
+#[test]
 fn file_input() {
     let ground_truth1 = vec![
         Complex64::new(1.6, 4.0),
