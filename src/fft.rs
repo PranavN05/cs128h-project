@@ -104,3 +104,51 @@ pub fn fft_in_place(inp: &mut Vec<Complex64>) {
         fft2_butterfly(inp, i, n);
     }
 }
+
+fn ifft(inp: &Vec<Complex64>) -> Vec<Complex64> {
+    let n = inp.len();
+    let c: Vec<Complex64> = inp.iter().map(|&x| x.conj()).collect(); 
+    let mut v = fft(&c); 
+    v.iter_mut().for_each(|x| *x /= n as f64);
+
+    v
+}
+
+fn czt(inp: Vec<Complex64>, m: usize, a: Complex64, w: Complex64) -> Vec<Complex64> {
+    let n = inp.len();
+
+    let mut chirp_pm = Vec::with_capacity(n);
+    for i in 0..n {
+        let exp = Complex64::new(0.0, -PI * i as f64 * i as f64).exp();
+        chirp_pm.push(inp[i] * exp);
+    }
+
+    let mut convolved = vec![Complex64::new(0.0,0.0); n + m - 1];
+    convolved[..n].copy_from_slice(&chirp_pm);
+    fft_in_place(&mut convolved);
+
+    let mut chirp_post = Vec::with_capacity(n + m - 1);
+    for i in 0..n + m - 1 {
+        let exp = Complex64::new(0.0, -PI * i as f64 * i as f64).exp();
+        chirp_post.push(exp);
+    }
+
+    for i in 0..n + m - 1 {
+        convolved[i] = convolved[i] * chirp_post[i];
+    }
+
+    convolved = ifft(&convolved);
+
+    let mut out = Vec::with_capacity(m);
+    for i in 0..m {
+        let exp = Complex64::new(0.0, -PI * i as f64 * i as f64).exp();
+        out.push(convolved[i] * exp);
+    }
+
+    let len = Complex64::new((n + m - 1) as f64, 0.0);
+    for i in 0..m {
+        out[i] = out[i] / len;
+    }
+
+    out
+}
