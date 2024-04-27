@@ -37,7 +37,7 @@ fn file_input() {
         Complex64::new(2.127, 5.0),
     ];
     assert_eq!(
-        fileio::complex_vec_from_file("testfiles\\test1.txt"),
+        fileio::complex_vec_from_file("./testfiles/test1.txt"),
         ground_truth1
     );
     let ground_truth2 = vec![
@@ -51,7 +51,7 @@ fn file_input() {
         Complex64::new(-182.0, 0.0),
     ];
     assert_eq!(
-        fileio::complex_vec_from_file("testfiles\\test2.txt"),
+        fileio::complex_vec_from_file("./testfiles/test2.txt"),
         ground_truth2
     );
 }
@@ -59,7 +59,7 @@ fn file_input() {
 #[test]
 #[should_panic(expected = "couldn't convert these into a decimal value")]
 fn file_input_non_decimal() {
-    fileio::complex_vec_from_file("testfiles\\invalid.txt");
+    fileio::complex_vec_from_file("./testfiles/invalid.txt");
 }
 
 #[test]
