@@ -27,12 +27,12 @@ fn base2fft_benchmark(c: &mut Criterion) {
             fft_in_place(&mut our)
         })
     });
+    let mut planner = FftPlanner::new();
+    let rusfft = planner.plan_fft_forward(numvals);
     group.bench_function(BenchmarkId::new("RustFFT", "ComplexVec"), |b| {
         b.iter(|| {
             let mut their = vals.clone();
-            FftPlanner::new()
-                .plan_fft_forward(numvals)
-                .process(&mut their)
+            rusfft.process(&mut their);
         })
     });
 }
