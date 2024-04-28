@@ -1,18 +1,21 @@
-use cs128h_project::fft::fft;
+use cs128h_project::fft::fft_in_place;
 use cs128h_project::fileio;
-use num_complex::Complex64;
+use std::env;
 
 fn main() {
-    let v: Vec<Complex64> = vec![
-        Complex64::new(2f64, 0f64),
-        Complex64::new(1f64, 0f64),
-        Complex64::new(-1f64, 0f64),
-        Complex64::new(5f64, 0f64),
-        Complex64::new(0f64, 0f64),
-        Complex64::new(3f64, 0f64),
-        Complex64::new(0f64, 0f64),
-        Complex64::new(-4f64, 0f64),
-    ];
-    let h = fft(&v);
-    println!("{:?}", h);
+    //Get filename from command line
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        eprintln!("Correct usage: cargo run -- <filename>\nEnsure <filename> is in input folder");
+        std::process::exit(1);
+    }
+    let mut filepath = String::from("./input/");
+    filepath += args[1].as_str();
+    //Read input from file
+    let mut inp = fileio::complex_vec_from_file(&filepath);
+    //Perform fft
+    fft_in_place(&mut inp);
+    //Read output to file
+    filepath = filepath.replace("./input/", "./output/");
+    fileio::complex_vec_to_file(&filepath, &inp);
 }
