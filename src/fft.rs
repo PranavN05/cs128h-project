@@ -42,15 +42,26 @@ fn root_unity(N: usize) -> Vec<Complex64> {
         .collect()
 }
 
-fn fft2_butterfly(inp: &mut Vec<Complex64>, lev: usize, n: usize) {
+fn fft2_butterfly(inp: &mut Vec<Complex64>, lev: usize) {
+    //n = log(inp.len)
+    //lev = log(size of chunk) - 1
+    //root_unity = factor between "twiddle factors" = e^(-2pi/(size of chunk)) = e^(-2pi / 2^(lev+1))
     let root_unity = Complex64::cis(-2f64 * PI / ((1 << lev + 1) as f64));
-    for i in 0..(1 << (n - lev - 1)) {
+    //Iterate through every chunk
+    //num chunks is total size / size_per_chunk = 2^n/2^(lev + 1) = 2^(n-lev-1)
+    for chunk in inp.chunks_mut(1 << (lev + 1)) {
+        //curr_root_unity = current "twiddle factor"
         let mut cur_root_unity = Complex64::new(1f64, 0f64);
+        //iterate through top and bottom halves of chunk in parallel
+        //chunk is 2^(lev + 1), half is 2^lev
         for j in 0..(1 << lev) {
-            let a1 = inp[(1 << (lev + 1)) * i + j];
-            let a2 = inp[(1 << (lev + 1)) * i + (1 << lev) + j];
-            inp[(1 << (lev + 1)) * i + j] = a1 + cur_root_unity * a2;
-            inp[(1 << (lev + 1)) * i + (1 << lev) + j] = a1 - cur_root_unity * a2;
+            //a1 = jth element of top half, a2 = jth element of bottom half
+            let a1 = chunk[j];
+            let a2 = chunk[(1 << lev) + j];
+            //modify a1 and a2 using twiddle factors and each other
+            chunk[j] = a1 + cur_root_unity * a2;
+            chunk[(1 << lev) + j] = a1 - cur_root_unity * a2;
+            //"increment" twiddle factor
             cur_root_unity *= root_unity;
         }
     }
@@ -87,7 +98,7 @@ pub fn fft(inp: &Vec<Complex64>) -> Vec<Complex64> {
     let mut v: Vec<Complex64> = (0..inp.len()).map(|x| inp[bit_reversal(x, n)]).collect();
     // let w = root_unity(n);
     for i in 0..n {
-        fft2_butterfly(&mut v, i, n);
+        fft2_butterfly(&mut v, i);
         // fft2_butterfly_weights(&mut v, &w, i, n);
     }
     v
@@ -101,6 +112,6 @@ pub fn fft_in_place(inp: &mut Vec<Complex64>) {
         }
     }
     for i in 0..n {
-        fft2_butterfly(inp, i, n);
+        fft2_butterfly(inp, i);
     }
 }

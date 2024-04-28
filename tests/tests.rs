@@ -5,7 +5,7 @@ use rustfft::{num_complex::Complex64, FftPlanner};
 
 #[test]
 fn base2fft_accuracy_randvals() {
-    let numvals = 1 << 16;
+    let numvals = 1 << 20;
     let mut rng = rand::thread_rng();
     let vals: Vec<Complex64> = (0..numvals)
         .map(|_| {
