@@ -120,7 +120,7 @@ dependencies = [
  "criterion-plot",
  "itertools",
  "lazy_static",
- "num-traits",
+ "num-traits 0.2.18",
  "oorandom",
  "plotters",
  "rayon",
@@ -178,9 +178,31 @@ name = "cs128h-project"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "num-complex",
+ "czt",
+ "num-complex 0.4.5",
  "rand",
  "rustfft",
+]
+
+[[package]]
+name = "czt"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a14ffeada190d10cfdf999269194c8848ba5c9093633065deaaa43c4388e2b7"
+dependencies = [
+ "dft",
+ "num-complex 0.1.43",
+ "num-traits 0.1.43",
+]
+
+[[package]]
+name = "dft"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86c83c6ce4ad5d596757571b99ae40694bbfd85453a9ca4862b13cc4cc290407"
+dependencies = [
+ "num-complex 0.1.43",
+ "num-traits 0.1.43",
 ]
 
 [[package]]
@@ -285,11 +307,20 @@ checksum = "6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d"
 
 [[package]]
 name = "num-complex"
+version = "0.1.43"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b288631d7878aaf59442cffd36910ea604ecd7745c36054328595114001c9656"
+dependencies = [
+ "num-traits 0.2.18",
+]
+
+[[package]]
+name = "num-complex"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23c6602fda94a57c990fe0df199a035d83576b496aa29f4e634a8ac6004e68a6"
 dependencies = [
- "num-traits",
+ "num-traits 0.2.18",
 ]
 
 [[package]]
@@ -298,7 +329,16 @@ version = "0.1.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7969661fd2958a5cb096e56c8e1ad0444ac2bbcd0061bd28660485a44879858f"
 dependencies = [
- "num-traits",
+ "num-traits 0.2.18",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.1.43"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92e5113e9fd4cc14ded8e499429f396a20f98c772a47cc8622a736e1ec843c31"
+dependencies = [
+ "num-traits 0.2.18",
 ]
 
 [[package]]
@@ -334,7 +374,7 @@ version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2c224ba00d7cadd4d5c660deaf2098e5e80e07846537c51f9cfa4be50c1fd45"
 dependencies = [
- "num-traits",
+ "num-traits 0.2.18",
  "plotters-backend",
  "plotters-svg",
  "wasm-bindgen",
@@ -474,9 +514,9 @@ version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e17d4f6cbdb180c9f4b2a26bbf01c4e647f1e1dea22fe8eb9db54198b32f9434"
 dependencies = [
- "num-complex",
+ "num-complex 0.4.5",
  "num-integer",
- "num-traits",
+ "num-traits 0.2.18",
  "primal-check",
  "strength_reduce",
  "transpose",
