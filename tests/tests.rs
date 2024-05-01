@@ -15,7 +15,7 @@ fn base2fft_accuracy_randvals() {
             )
         })
         .collect();
-    println!("{:?}", vals);
+    // println!("{:?}", vals);
     let mut our_truth = vals.clone();
     let mut their_truth = vals.clone();
     let w = precompute_weights(16);
@@ -23,8 +23,8 @@ fn base2fft_accuracy_randvals() {
     FftPlanner::new()
         .plan_fft_forward(numvals)
         .process(&mut their_truth);
-    println!("{:?}", our_truth);
-    println!("{:?}", their_truth);
+    // println!("{:?}", our_truth);
+    // println!("{:?}", their_truth);
     for i in 0..numvals {
         let diff = our_truth[i] - their_truth[i];
         assert!(diff.norm_sqr() < 0.01);
@@ -41,7 +41,7 @@ fn file_input() {
         Complex64::new(2.127, 5.0),
     ];
     assert_eq!(
-        fileio::complex_vec_from_file("./testfiles/test1.txt"),
+        fileio::complex_vec_from_complex_file("./testfiles/test1.txt"),
         ground_truth1
     );
     let ground_truth2 = vec![
@@ -55,7 +55,7 @@ fn file_input() {
         Complex64::new(-182.0, 0.0),
     ];
     assert_eq!(
-        fileio::complex_vec_from_file("./testfiles/test2.txt"),
+        fileio::complex_vec_from_complex_file("./testfiles/test2.txt"),
         ground_truth2
     );
 }
@@ -63,11 +63,11 @@ fn file_input() {
 #[test]
 #[should_panic(expected = "couldn't convert these into a decimal value")]
 fn file_input_non_decimal() {
-    fileio::complex_vec_from_file("./testfiles/invalid.txt");
+    fileio::complex_vec_from_complex_file("./testfiles/invalid.txt");
 }
 
 #[test]
 #[should_panic(expected = "couldn't open doesntexist")]
 fn file_input_bad_path() {
-    fileio::complex_vec_from_file("doesntexist");
+    fileio::complex_vec_from_complex_file("doesntexist");
 }

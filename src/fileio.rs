@@ -3,7 +3,43 @@ use std::io::prelude::*;
 
 use num_complex::Complex64;
 
-pub fn complex_vec_from_file(path: &str) -> Vec<Complex64> {
+pub fn complex_vec_from_real_file(path: &str) -> Vec<Complex64> {
+    // Takes a file path as an input, returns vector of Complex64
+    // Expecting data points separated by whitespace
+    // Each data point represented by a single decimal value (only real values)
+    // Panics if path invalid or if file has non-decimal text
+
+    //Read String from File
+    let mut file = match OpenOptions::new().read(true).open(path) {
+        Err(_) => panic!("couldn't open {}", path),
+        Ok(file) => file,
+    };
+
+    let mut s = String::new();
+    match file.read_to_string(&mut s) {
+        Err(err) => panic!("couldn't read {}: {}", path, err),
+        _ => (),
+    }
+
+    //Parse String into Vec<Complex64>
+    let mut toreturn: Vec<Complex64> = Vec::new();
+    let mut iter = s.split_ascii_whitespace();
+    loop {
+        let mut num = Complex64::new(0.0, 0.0);
+        //only real part needs to be read
+        match iter.next() {
+            Some(x) => match x.parse::<f64>() {
+                Ok(x) => num.re = x,
+                Err(_) => panic!("couldn't convert {} into a decimal value", x),
+            },
+            None => break,
+        }
+        toreturn.push(num);
+    }
+    toreturn
+}
+
+pub fn complex_vec_from_complex_file(path: &str) -> Vec<Complex64> {
     // Takes a file path as an input, returns vector of Complex64
     // Expecting data points separated by whitespace
     // Each data point represented by two whitespace separated values
