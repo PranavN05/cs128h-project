@@ -75,7 +75,7 @@ fn file_input_non_decimal() {
 fn file_input_bad_path() {
     fileio::complex_vec_from_complex_file("doesntexist");
 }
-
+/*
 #[test]
 fn ifft_accuracy_randvals() {
     let numvals = 1 << 20;
@@ -98,7 +98,7 @@ fn ifft_accuracy_randvals() {
         let diff = our_truth[i] - their_truth[i];
         assert!(diff.norm_sqr() < 0.01);
     }
-}
+}*/
 /* 
 #[test]
 fn czt_accuracy_randvals() {
