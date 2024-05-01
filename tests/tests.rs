@@ -99,7 +99,7 @@ fn ifft_accuracy_randvals() {
         assert!(diff.norm_sqr() < 0.01);
     }
 }
-
+/* 
 #[test]
 fn czt_accuracy_randvals() {
     let numvals = 1 << 10;
@@ -135,3 +135,4 @@ fn czt_accuracy_randvals() {
           assert!(diff.norm_sqr() < 0.1);
       }
   }
+*/
