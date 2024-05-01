@@ -3,43 +3,35 @@ use std::f64::consts::PI;
 
 #[inline(always)]
 fn bit_reversal(ind: usize, nbits: usize) -> usize {
-    ind.reverse_bits() >> (usize::BITS as usize - nbits)
+    ind.reverse_bits() >> ((usize::BITS as usize - nbits) % usize::BITS as usize)
 }
 
-fn fft_butterfly(mut inp: Vec<Complex64>, rad: usize, lev: usize) -> Vec<Complex64> {
-    let n = inp.len().ilog2() as usize;
-    for i in 0..(1 << (n - lev - rad)) {
-        for j in 0..(1 << lev) {
-            let ind: Vec<usize> = (0..(1 << rad))
-                .map(|x| i * (1 << (lev + rad)) + x * (1 << lev) + j)
-                .collect();
-            let a: Vec<Complex64> = ind
+pub fn precompute_weights(n: usize) -> Vec<Complex64> {
+    (0..(1 << n))
+        .map(|x| Complex64::cis(-2f64 * PI * (x as f64) / ((1 << n) as f64)))
+        .collect()
+}
+
+fn fft_butterfly(inp: &mut Vec<Complex64>, w: &Vec<Complex64>, rad: usize, lev: usize, n: usize) {
+    for (k0, chunk) in inp.chunks_mut(1 << (n - lev)).enumerate() {
+        for k2 in 0..(1 << (n - lev - rad)) {
+            let a: Vec<Complex64> = chunk
                 .iter()
-                .map(|x| {
-                    let temp = inp[*x];
-                    inp[*x] = Complex64::new(0f64, 0f64);
-                    temp
-                })
+                .skip(k2)
+                .step_by(1 << (n - lev - rad))
+                .map(|x| *x)
                 .collect();
-            for k in 0..(1 << rad) {
-                let root_unity = Complex64::cis(
-                    -2f64 * PI * bit_reversal(k, rad) as f64 / (1 << (lev + rad)) as f64,
-                );
-                let mut cur_root_unity = Complex64::new(1f64, 0f64);
-                for l in 0..(1 << rad) {
-                    inp[ind[l]] += a[k] * cur_root_unity;
-                    cur_root_unity *= root_unity;
+            for k1 in 0..(1 << rad) {
+                let mut sum = Complex64::new(0f64, 0f64);
+                for j1 in 0..(1 << rad) {
+                    sum += a[j1]
+                        * w[j1 * bit_reversal(k1, rad) * (1 << (n - rad)) % (1 << n)]
+                        * w[j1 * bit_reversal(k0, lev) * (1 << (n - lev - rad)) % (1 << n)];
                 }
+                chunk[(1 << (n - lev - rad)) * k1 + k2] = sum;
             }
         }
     }
-    inp
-}
-
-fn root_unity(N: usize) -> Vec<Complex64> {
-    (0..(1 << (N - 1)))
-        .map(|x| Complex64::cis(-2f64 * PI * (x as f64) / ((1 << N) as f64)))
-        .collect()
 }
 
 fn fft2_butterfly(inp: &mut Vec<Complex64>, lev: usize) {
@@ -67,51 +59,152 @@ fn fft2_butterfly(inp: &mut Vec<Complex64>, lev: usize) {
     }
 }
 
-fn fft2_butterfly_weights(
-    inp: &mut Vec<Complex64>,
-    weights: &Vec<Complex64>,
-    lev: usize,
-    n: usize,
-) {
-    for i in 0..(1 << (n - lev - 1)) {
-        for j in 0..(1 << lev) {
-            let a1 = inp[(1 << (lev + 1)) * i + j];
-            let a2 = inp[(1 << (lev + 1)) * i + (1 << lev) + j];
-            inp[(1 << (lev + 1)) * i + j] = a1 + weights[j * (1 << (n - lev - 1))] * a2;
-            inp[(1 << (lev + 1)) * i + (1 << lev) + j] =
-                a1 - weights[j * (1 << (n - lev - 1))] * a2;
-        }
-    }
-}
-
-fn fft4_butterfly(inp: &mut Vec<Complex64>, lev: usize, n: usize) {
-    for i in 0..(1 << (n - lev - 2)) {
-        for j in 0..(1 << lev) {
-            // let a: Vec<Complex64> =
-        }
-    }
-}
-
-pub fn fft(inp: &Vec<Complex64>) -> Vec<Complex64> {
+pub fn fft_naive(inp: &Vec<Complex64>) -> Vec<Complex64> {
     assert!(inp.len() & (inp.len() - 1) == 0); // checks if power of 2
     let n = inp.len().ilog2() as usize; // inp.len() = 2^n
     let mut v: Vec<Complex64> = (0..inp.len()).map(|x| inp[bit_reversal(x, n)]).collect();
-    // let w = root_unity(n);
     for i in 0..n {
         fft2_butterfly(&mut v, i);
-        // fft2_butterfly_weights(&mut v, &w, i, n);
     }
     v
 }
 
-pub fn fft_in_place(inp: &mut Vec<Complex64>) {
+fn fft2_butterfly_weights(inp: &mut Vec<Complex64>, w: &Vec<Complex64>, lev: usize, n: usize) {
+    for (k0, chunk) in inp.chunks_mut(1 << (n - lev)).enumerate() {
+        for k2 in 0..(1 << (n - lev - 1)) {
+            let a1: Complex64 = chunk[k2];
+            let a2: Complex64 = chunk[(1 << (n - lev - 1)) + k2];
+            chunk[k2] = a1 + w[bit_reversal(k0, lev) * (1 << (n - lev - 1)) % (1 << n)] * a2;
+            chunk[(1 << (n - lev - 1)) + k2] =
+                a1 - w[bit_reversal(k0, lev) * (1 << (n - lev - 1)) % (1 << n)] * a2;
+        }
+    }
+}
+
+fn fft4_butterfly(inp: &mut Vec<Complex64>, w: &Vec<Complex64>, lev: usize, n: usize) {
+    /*
+    for (k0, chunk) in inp.chunks_mut(1 << (n - lev)).enumerate() {
+        for k2 in 0..(1 << (n - lev - 2)) {
+            let a0 = chunk[k2];
+            let a1 = chunk[(1 << (n - lev - 2)) + k2];
+            let a2 = chunk[2 * (1 << (n - lev - 2)) + k2];
+            let a3 = chunk[3 * (1 << (n - lev - 2)) + k2];
+            let w1r: f64 = w[1 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re;
+            let w1i: f64 = w[1 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].im / w1r;
+            let w2r: f64 = w[2 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re;
+            let w2i: f64 = w[2 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].im / w2r;
+            let w3r: f64 = w[3 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re / w1r;
+            let w3i: f64 = w[3 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].im
+                / w[3 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re;
+            let b1r = a1.re - a1.im * w1i;
+            let b1i = a1.im + a1.re * w1i;
+            let b2r = a2.re - a2.im * w2i;
+            let b2i = a2.im + a2.re * w2i;
+            let b3r = a3.re - a3.im * w3i;
+            let b3i = a3.im + a3.re * w3i;
+            let c0r = a0.re + b2r * w2r;
+            let c0i = a0.im + b2i * w2r;
+            let c2r = a0.re - b2r * w2r;
+            let c2i = a0.im - b2i * w2r;
+            let c1r = b1r + b3r * w3r;
+            let c1i = b1i + b3i * w3r;
+            let c3r = b1r - b3r * w3r;
+            let c3i = b1i - b3i * w3r;
+            chunk[k2] = Complex64::new(c0r + c1r * w1r, c0i + c1i * w1r);
+            chunk[1 * (1 << (n - lev - 2)) + k2] = Complex64::new(c0r - c1r * w1r, c0i - c1i * w1r);
+            chunk[3 * (1 << (n - lev - 2)) + k2] = Complex64::new(c2r - c3i * w1r, c2i + c3r * w1r);
+            chunk[2 * (1 << (n - lev - 2)) + k2] = Complex64::new(c2r + c3i * w1r, c2i - c3r * w1r);
+        }
+    }
+    */
+    for k0 in 0..(1 << lev) {
+        let w1r: f64 = w[1 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re;
+        let w1i: f64 = w[1 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].im / w1r;
+        let w2r: f64 = w[2 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re;
+        let w2i: f64 = w[2 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].im / w2r;
+        let w3r: f64 = w[3 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re / w1r;
+        let w3i: f64 = w[3 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].im
+            / w[3 * bit_reversal(k0, lev) * (1 << (n - lev - 2)) % (1 << n)].re;
+        for k2 in 0..(1 << (n - lev - 2)) {
+            let a0 = inp[k0 * (1 << (n - lev)) + k2];
+            let a1 = inp[k0 * (1 << (n - lev)) + (1 << (n - lev - 2)) + k2];
+            let a2 = inp[k0 * (1 << (n - lev)) + 2 * (1 << (n - lev - 2)) + k2];
+            let a3 = inp[k0 * (1 << (n - lev)) + 3 * (1 << (n - lev - 2)) + k2];
+            let b1r = a1.re - a1.im * w1i;
+            let b1i = a1.im + a1.re * w1i;
+            let b2r = a2.re - a2.im * w2i;
+            let b2i = a2.im + a2.re * w2i;
+            let b3r = a3.re - a3.im * w3i;
+            let b3i = a3.im + a3.re * w3i;
+            let c0r = a0.re + b2r * w2r;
+            let c0i = a0.im + b2i * w2r;
+            let c2r = a0.re - b2r * w2r;
+            let c2i = a0.im - b2i * w2r;
+            let c1r = b1r + b3r * w3r;
+            let c1i = b1i + b3i * w3r;
+            let c3r = b1r - b3r * w3r;
+            let c3i = b1i - b3i * w3r;
+
+            inp[k0 * (1 << (n - lev)) + k2] = Complex64::new(c0r + c1r * w1r, c0i + c1i * w1r);
+            inp[k0 * (1 << (n - lev)) + 1 * (1 << (n - lev - 2)) + k2] =
+                Complex64::new(c0r - c1r * w1r, c0i - c1i * w1r);
+            inp[k0 * (1 << (n - lev)) + 3 * (1 << (n - lev - 2)) + k2] =
+                Complex64::new(c2r - c3i * w1r, c2i + c3r * w1r);
+            inp[k0 * (1 << (n - lev)) + 2 * (1 << (n - lev - 2)) + k2] =
+                Complex64::new(c2r + c3i * w1r, c2i - c3r * w1r);
+
+            /*
+            inp[k0 * (1 << (n - lev)) + k2].re = c0r + c1r * w1r;
+            inp[k0 * (1 << (n - lev)) + k2].im = c0i + c1i * w1r;
+            inp[k0 * (1 << (n - lev)) + 1 * (1 << (n - lev - 2)) + k2].re = c0r - c1r * w1r;
+            inp[k0 * (1 << (n - lev)) + 1 * (1 << (n - lev - 2)) + k2].im = c0i - c1i * w1r;
+            inp[k0 * (1 << (n - lev)) + 3 * (1 << (n - lev - 2)) + k2].re = c2r - c3i * w1r;
+            inp[k0 * (1 << (n - lev)) + 3 * (1 << (n - lev - 2)) + k2].im = c2i + c3r * w1r;
+            inp[k0 * (1 << (n - lev)) + 2 * (1 << (n - lev - 2)) + k2].re = c2r + c3i * w1r;
+            inp[k0 * (1 << (n - lev)) + 2 * (1 << (n - lev - 2)) + k2].im = c2i - c3r * w1r;
+            */
+        }
+    }
+}
+
+fn fft4_butterfly0(inp: &mut Vec<Complex64>, n: usize) {
+    for k2 in 0..(1 << (n - 2)) {
+        let a0 = inp[k2];
+        let a1 = inp[(1 << (n - 2)) + k2];
+        let a2 = inp[2 * (1 << (n - 2)) + k2];
+        let a3 = inp[3 * (1 << (n - 2)) + k2];
+        let c0r = a0.re + a2.re;
+        let c0i = a0.im + a2.im;
+        let c2r = a0.re - a2.re;
+        let c2i = a0.im - a2.im;
+        let c1r = a1.re + a3.re;
+        let c1i = a1.im + a3.im;
+        let c3r = a1.re - a3.re;
+        let c3i = a1.im - a3.im;
+        inp[k2] = Complex64::new(c0r + c1r, c0i + c1i);
+        inp[(1 << (n - 2)) + k2] = Complex64::new(c0r - c1r, c0i - c1i);
+        inp[3 * (1 << (n - 2)) + k2] = Complex64::new(c2r - c3i, c2i + c3r);
+        inp[2 * (1 << (n - 2)) + k2] = Complex64::new(c2r + c3i, c2i - c3r);
+    }
+}
+
+pub fn fft_optimized(inp: &mut Vec<Complex64>, w: &Vec<Complex64>) {
     let n = inp.len().ilog2() as usize;
+    let mut lev = 0;
+    if n >= 2 {
+        fft4_butterfly0(inp, n);
+        lev += 2;
+    }
+    if n & 1 != 0 {
+        fft2_butterfly_weights(inp, w, lev, n);
+        lev += 1;
+    }
+    for i in (lev..n).step_by(2) {
+        fft4_butterfly(inp, w, i, n);
+    }
     for i in 0..(1 << n) {
         if i < bit_reversal(i, n) {
             inp.swap(i, bit_reversal(i, n));
         }
-    }
-    for i in 0..n {
-        fft2_butterfly(inp, i);
     }
 }

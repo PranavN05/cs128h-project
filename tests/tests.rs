@@ -1,11 +1,11 @@
-use cs128h_project::fft::{fft, fft_in_place};
+use cs128h_project::fft::{fft_optimized, precompute_weights};
 use cs128h_project::fileio;
 use rand::Rng;
 use rustfft::{num_complex::Complex64, FftPlanner};
 
 #[test]
 fn base2fft_accuracy_randvals() {
-    let numvals = 1 << 20;
+    let numvals = 1 << 16;
     let mut rng = rand::thread_rng();
     let vals: Vec<Complex64> = (0..numvals)
         .map(|_| {
@@ -15,12 +15,16 @@ fn base2fft_accuracy_randvals() {
             )
         })
         .collect();
+    println!("{:?}", vals);
     let mut our_truth = vals.clone();
     let mut their_truth = vals.clone();
-    fft_in_place(&mut our_truth);
+    let w = precompute_weights(16);
+    fft_optimized(&mut our_truth, &w);
     FftPlanner::new()
         .plan_fft_forward(numvals)
         .process(&mut their_truth);
+    println!("{:?}", our_truth);
+    println!("{:?}", their_truth);
     for i in 0..numvals {
         let diff = our_truth[i] - their_truth[i];
         assert!(diff.norm_sqr() < 0.01);

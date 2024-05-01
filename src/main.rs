@@ -1,4 +1,4 @@
-use cs128h_project::fft::fft_in_place;
+use cs128h_project::fft::{fft_optimized, precompute_weights};
 use cs128h_project::fileio;
 use std::env;
 
@@ -14,8 +14,10 @@ fn main() {
     //Read input from file
     let mut inp = fileio::complex_vec_from_file(&filepath);
     //Perform fft
-    fft_in_place(&mut inp);
+    let weights = precompute_weights(inp.len().ilog2() as usize);
+    fft_optimized(&mut inp, &weights);
     //Read output to file
     filepath = filepath.replace("./input/", "./output/");
     fileio::complex_vec_to_file(&filepath, &inp);
 }
+
