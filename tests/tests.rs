@@ -1,11 +1,8 @@
-use cs128h_project::fft::{fft_optimized, precompute_weights};
+use cs128h_project::fft::{ifft, fft_optimized, precompute_weights};
 use cs128h_project::fileio;
-use cs128h_project::czt::{ifft, czt};
+use cs128h_project::czt::czt;
 use rand::Rng;
 use rustfft::{num_complex::Complex64, FftPlanner};
-use czt::{transform, c64};
-use num_complex::Complex;
-use std::f64::consts::PI;
 
 #[test]
 fn base2fft_accuracy_randvals() {
@@ -29,6 +26,37 @@ fn base2fft_accuracy_randvals() {
         .process(&mut their_truth);
     // println!("{:?}", our_truth);
     // println!("{:?}", their_truth);
+    for i in 0..numvals {
+        let diff = our_truth[i] - their_truth[i];
+        assert!(diff.norm_sqr() < 0.01);
+        
+    }
+    let ifft_truth = ifft(&our_truth);
+    for i in 0..numvals {
+        
+        assert!((ifft_truth[i] - vals[i]).norm_sqr() < 0.01)
+    }
+}
+
+#[test]
+fn cztasfft_accuracy_randvals() {
+    
+    let mut rng = rand::thread_rng();
+    let numvals = rng.gen::<usize>() % 50000;
+    let vals: Vec<Complex64> = (0..numvals)
+        .map(|_| {
+            Complex64::new(
+                ((rng.gen::<f64>() * 200.0 - 100.0) * 1000.0).trunc() / 1000.0,
+                ((rng.gen::<f64>() * 200.0 - 100.0) * 1000.0).trunc() / 1000.0,
+            )
+        })
+        .collect();
+    // println!("{:?}", vals);
+    let our_truth = czt(vals.clone(), numvals, None, None);
+    let mut their_truth = vals.clone();
+    FftPlanner::new()
+        .plan_fft_forward(numvals)
+        .process(&mut their_truth);
     for i in 0..numvals {
         let diff = our_truth[i] - their_truth[i];
         assert!(diff.norm_sqr() < 0.01);
@@ -99,40 +127,3 @@ fn ifft_accuracy_randvals() {
         assert!(diff.norm_sqr() < 0.01);
     }
 }*/
-/* 
-#[test]
-fn czt_accuracy_randvals() {
-    let numvals = 1 << 10;
-    let mut rng = rand::thread_rng();
-
-    let mut vals: Vec<Complex64> = (0..numvals)
-          .map(|_| {
-              Complex64::new(
-                  rng.gen::<f64>() * 20.0 - 10.0,
-                  rng.gen::<f64>() * 20.0 - 10.0,
-              )
-          })
-          .collect();
-
-    let mut vals2: Vec<c64> = (0..numvals)
-          .map(|_| {
-            c64::new{
-                rng.gen::<f64>() * 20.0 - 10.0,
-                rng.gen::<f64>() * 20.0 - 10.0,
-            }
-          }).collect();
-      
-      let our_truth = czt(vals, numvals, None, None);
-      let w = c64::new(0.0, -2.0 * PI / numvals as f64).exp();
-      let a = c64::new(1.0, 0.0);
-
-
-
-      vals = transform(&vals2, numvals, w, a);
-
-      for i in 0..numvals {
-          let diff = our_truth[i] - vals[i];
-          assert!(diff.norm_sqr() < 0.1);
-      }
-  }
-*/

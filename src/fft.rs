@@ -288,3 +288,13 @@ pub fn fft_optimized(inp: &mut Vec<Complex64>, w: &Vec<Complex64>) {
         }
     }
 }
+
+pub fn ifft(inp: &Vec<Complex64>) -> Vec<Complex64> {
+    let n = inp.len().ilog2() as usize;
+    let mut c: Vec<Complex64> = inp.clone();
+    (&mut c[1..]).reverse();
+    fft_optimized(&mut c, &precompute_weights(n));
+    c.iter_mut().for_each(|x| *x /= inp.len() as f64);
+
+    c
+}

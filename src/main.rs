@@ -1,3 +1,4 @@
+use cs128h_project::czt::czt;
 use cs128h_project::fft::{fft_optimized, precompute_weights};
 use cs128h_project::fileio;
 use std::env;
@@ -20,8 +21,16 @@ fn main() {
         _ => panic!("Should not reach this"),
     };
     //Perform fft
-    let weights = precompute_weights(inp.len().ilog2() as usize);
-    fft_optimized(&mut inp, &weights);
+    match inp.len() & inp.len() - 1 == 0 {
+        true => {
+            let weights = precompute_weights(inp.len().ilog2() as usize);
+            fft_optimized(&mut inp, &weights);
+        }
+        false => {
+            inp = czt(inp.clone(), inp.len(), None, None);
+        }
+    }
+
     //Read output to file
     filepath = filepath.replace("./input/", "./output/");
     fileio::complex_vec_to_file(&filepath, &inp);
